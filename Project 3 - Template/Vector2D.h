@@ -43,7 +43,7 @@ float Vector2DSquareDistance(Vector2D *pVec0, Vector2D *pVec1);
 
 float Vector2DDotProduct(Vector2D *pVec0, Vector2D *pVec1);
 
-void Vector2DFromAngle(Vector2D *pResult, float angle);
+void Vector2DFromAngleDeg(Vector2D *pResult, float angle);
 
-
+void Vector2DFromAngleRad(Vector2D *pResult, float angle);
 #endif

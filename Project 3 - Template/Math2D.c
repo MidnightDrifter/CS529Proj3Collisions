@@ -155,7 +155,47 @@ This function checks whether an animated point is colliding with a line segment
 */
 float AnimatedPointToStaticLineSegment(Vector2D *Ps, Vector2D *Pe, LineSegment2D *LS, Vector2D *Pi)
 {
-	return -1.0f;
+	if( (Pe->x == Ps->x && Pe->y == Ps->y) ||(Vector2DDotProduct(&LS->mN, Ps) > LS->mNdotP0 && Vector2DDotProduct(&LS->mN, Pe)>LS->mNdotP0) || (Vector2DDotProduct(&LS->mN, Ps) < LS->mNdotP0 && Vector2DDotProduct(&LS->mN, Pe) < LS->mNdotP0))
+	{
+		return -1.f;
+	}
+	//return -1.0f;
+	Vector2D v;
+	v.x = Pe->x - Ps->x;
+	v.y = Pe->y - Ps->y;
+	float t = Vector2DDotProduct(&LS->mN, &v);
+
+	if (  t == 0.f)
+	{
+		return -1;
+	}
+
+	 t = ((LS->mNdotP0 - Vector2DDotProduct(&LS->mN, Ps))/ t);
+
+	 if (t > 1 || t < 0)
+	 {
+		 return -1.f;
+	 }
+
+	 Vector2D tempI, line, nLine, ItoP1, ItoP0;
+	 Vector2DScaleAdd(&tempI, &v, Ps, t);
+	 Vector2DSubtract(&line, LS->mP0, LS->mP1);
+	 Vector2DSubtract(&ItoP1, &tempI, LS->mP1);
+	 Vector2DSubtract(&ItoP0, &tempI, LS->mP0);
+
+	 Vector2DScale(&nLine, &line, -1.f);
+	 if (Vector2DDotProduct(&line, &ItoP1) < 0 || Vector2DDotProduct(&nLine, &ItoP0) < 0)
+	 {
+		 return -1.f;
+	 }
+
+
+	 Vector2DSet(Pi, tempI.x, tempI.y);
+	 return t;
+	
+
+
+
 }
 
 
@@ -175,7 +215,52 @@ This function checks whether an animated circle is colliding with a line segment
 */
 float AnimatedCircleToStaticLineSegment(Vector2D *Ps, Vector2D *Pe, float Radius, LineSegment2D *LS, Vector2D *Pi)
 {
-	return -1.0f;
+	//return -1.0f;
+	float nR = -1 * Radius;
+	if ((Pe->x == Ps->x && Pe->y == Ps->y) || (LS->mNdotP0 - Vector2DDotProduct(&LS->mN, Ps) < nR  && LS->mNdotP0 - Vector2DDotProduct(&LS->mN, Pe) < nR) || (LS->mNdotP0 -Vector2DDotProduct(&LS->mN, Ps) > Radius &&  LS->mNdotP0 - Vector2DDotProduct(&LS->mN, Pe) > Radius))
+	{
+		return -1.f;
+	}
+	//return -1.0f;
+
+	float d=Radius;
+
+	if (StaticPointToStaticLineSegment(Ps, LS) < 0)
+	{
+		d *= -1;
+	}
+
+	Vector2D v;
+	v.x = Pe->x - Ps->x;
+	v.y = Pe->y - Ps->y;
+	float t = Vector2DDotProduct(&LS->mN, &v);
+
+	if (t == 0.f)
+	{
+		return -1;
+	}
+
+	t = ((LS->mNdotP0 - Vector2DDotProduct(&LS->mN, Ps) + d) / t);
+
+	if (t > 1 || t < 0)
+	{
+		return -1.f;
+	}
+
+	Vector2D tempI, line,nLine, ItoP1, ItoP0;
+	Vector2DScaleAdd(&tempI, &v, Ps, t);
+	Vector2DSubtract(&line, LS->mP0, LS->mP1);
+	Vector2DSubtract(&ItoP1, &tempI, LS->mP1);
+	Vector2DSubtract(&ItoP0, &tempI, LS->mP0);
+	Vector2DScale(&nLine, &line, -1.f);
+	if (Vector2DDotProduct(&line, &ItoP1) < 0 || Vector2DDotProduct(&nLine, &ItoP0) < 0)
+	{
+		return -1.f;
+	}
+
+
+	Vector2DSet(Pi, tempI.x, tempI.y);
+	return t;
 }
 
 
