@@ -281,7 +281,23 @@ It should first make sure that the animated point is intersecting with the line
 */
 float ReflectAnimatedPointOnStaticLineSegment(Vector2D *Ps, Vector2D *Pe, LineSegment2D *LS, Vector2D *Pi, Vector2D *R)
 {
-	return -1.0f;
+	float f = AnimatedPointToStaticLineSegment(Ps, Pe, LS, Pi);
+	if (f < 0)
+	{
+		return -1.0f;
+	}
+	float speed = sqrtf(((Ps->x - Pe->x)*(Ps->x - Pe->x)) + ((Ps->y - Pe->y)*(Ps->y - Pe->y)));  //Scale down by a factor of 1-t  ?
+	Vector2D i,r;
+	Vector2DSet(&i, Pe->x - Pi->x, Pe->y - Pi->y);
+	Vector2DScale(&r, &LS->mN, 2 * Vector2DDotProduct(&i, &LS->mN));
+	Vector2DAdd(&i, Pi, &i);
+	Vector2DSubtract(R, &i, &r);
+	Vector2DNormalize(R, R);
+	Vector2DScale(R, R, speed);  
+	return f;
+
+
+
 }
 
 
@@ -303,7 +319,23 @@ It should first make sure that the animated point is intersecting with the line
 */
 float ReflectAnimatedCircleOnStaticLineSegment(Vector2D *Ps, Vector2D *Pe, float Radius, LineSegment2D *LS, Vector2D *Pi, Vector2D *R)
 {
-	return -1.0f;
+	//return -1.0f;
+
+	float f = AnimatedCircleToStaticLineSegment(Ps, Pe,Radius, LS, Pi);
+	if (f < 0)
+	{
+		return -1.0f;
+	}
+	float speed = sqrtf(((Ps->x - Pe->x)*(Ps->x - Pe->x)) + ((Ps->y - Pe->y)*(Ps->y - Pe->y)));  //Scale down by a factor of 1-t  ?
+	Vector2D i, r;
+	Vector2DSet(&i, Pe->x - Pi->x, Pe->y - Pi->y);
+	Vector2DScale(&r, &LS->mN, 2 * Vector2DDotProduct(&i, &LS->mN));
+	Vector2DAdd(&i, Pi, &i);
+	Vector2DSubtract(R, &i, &r);
+	Vector2DNormalize(R, R);
+	Vector2DScale(R, R, speed);
+	return f;
+
 }
 
 
@@ -323,7 +355,46 @@ This function checks whether an animated point is colliding with a static circle
 */
 float AnimatedPointToStaticCircle(Vector2D *Ps, Vector2D *Pe, Vector2D *Center, float Radius, Vector2D *Pi)
 {
-	return -1.0f;
+	//return -1.0f;
+	Vector2D v, bc, vUnit;
+	float f, disc, a, b, c,m,n;
+
+	Vector2DSubtract(&v, Pe, Ps);
+	Vector2DSubtract(&bc, Center, Ps);
+	Vector2DNormalize(&vUnit, &v);
+	m = Vector2DDotProduct(&bc, &vUnit);
+	n = (v.x * v.x + v.y * v.y) - (m*m);
+	if ((v.x == v.y && v.x == 0) ||(n*n > Radius*Radius))
+	{
+		return -1.f;
+	}
+	a = Vector2DDotProduct(&v, &v);
+	b = -2 * Vector2DDotProduct(&bc, &v);
+	c = (Vector2DDotProduct(&bc, &bc)) * (Radius * Radius);
+	disc = (b*b) - (4 * a*c);
+
+	if(disc<0)
+	{
+		return -1;
+	}
+
+	else if (disc > 0)
+	{
+		f = fminf(((b + sqrtf(disc))/(-2*a)), ((b - sqrtf(disc)) / (-2 * a)));
+	}
+
+	else
+	{
+		f = b / (-2 * a);
+	}
+
+	if (f > 1 || f < 0)
+	{
+		return -1;
+	}
+	Vector2DScaleAdd(Pi, &v, Ps, f);
+	return f;
+
 }
 
 
@@ -346,7 +417,24 @@ It should first make sure that the animated point is intersecting with the circl
 */
 float ReflectAnimatedPointOnStaticCircle(Vector2D *Ps, Vector2D *Pe, Vector2D *Center, float Radius, Vector2D *Pi, Vector2D *R)
 {
-	return -1.0f;
+	//return -1.0f;
+
+	float f = AnimatedPointToStaticCircle(Ps, Pe,Center, Radius, Pi);
+	if(f<0)
+	{
+		return -1.f;
+	}
+	float speed = sqrtf(((Ps->x - Pe->x)*(Ps->x - Pe->x)) + ((Ps->y - Pe->y)*(Ps->y - Pe->y)));
+	speed *= (1.f - f);
+	Vector2D m, n;
+	Vector2DSubtract(&m, Pi, Ps);
+	Vector2DSubtract(&n, Pi, Center);
+	Vector2DNormalize(&n, &n);
+	Vector2DScale(&n, &n, 2 * Vector2DDotProduct(&m, &n));
+	Vector2DSubtract(&n, &n, &m);
+	Vector2DScale(&n, &n, speed);
+	Vector2DAdd(R, Pi, &n);
+	return f;
 }
 
 
@@ -367,7 +455,8 @@ This function checks whether an animated circle is colliding with a static circl
 */
 float AnimatedCircleToStaticCircle(Vector2D *Center0s, Vector2D *Center0e, float Radius0, Vector2D *Center1, float Radius1, Vector2D *Pi)
 {
-	return -1.0f;
+	//return -1.0f;
+	return AnimatedPointToStaticCircle(Center0s, Center0e, Center1, Radius0 + Radius1, Pi);
 }
 
 
@@ -390,5 +479,8 @@ It should first make sure that the animated circle is intersecting with the stat
 */
 float ReflectAnimatedCircleOnStaticCircle(Vector2D *Center0s, Vector2D *Center0e, float Radius0, Vector2D *Center1, float Radius1, Vector2D *Pi, Vector2D *R)
 {
-	return -1.0f;
+//	return -1.0f;
+
+	return ReflectAnimatedPointOnStaticCircle(Center0s, Center0e, Center1, Radius0 + Radius1, Pi, R);
+
 }
