@@ -68,12 +68,12 @@ typedef struct
 
 typedef struct
 {
-	AEVec2					mPosition;		// Current position
+	Vector2D					mPosition;		// Current position
 	float					mAngle;			// Current angle
 	float					mScaleX;		// Current X scaling value
 	float					mScaleY;		// Current Y scaling value
 
-	AEMtx33					mTransform;		// Object transformation matrix: Each frame, calculate the object instance's transformation matrix and save it here
+	Matrix2D					mTransform;		// Object transformation matrix: Each frame, calculate the object instance's transformation matrix and save it here
 
 	GameObjectInstance *	mpOwner;		// This component's owner
 }Component_Transform;
@@ -82,7 +82,7 @@ typedef struct
 
 typedef struct
 {
-	AEVec2					mVelocity;		// Current velocity
+	Vector2D					mVelocity;		// Current velocity
 
 	GameObjectInstance *	mpOwner;		// This component's owner
 }Component_Physics;
@@ -110,14 +110,14 @@ static unsigned long		sgShapeNum;													// The number of defined shapes
 static GameObjectInstance		sgGameObjectInstanceList[GAME_OBJ_INST_NUM_MAX];		// Each element in this array represents a unique game object instance
 static unsigned long			sgGameObjectInstanceNum;								// The number of active game object instances
 
-static AEVec2			gRoomPoints[LINE_SEGMENTS_NUM * 2];
-static AELineSegment2D	gRoomLineSegments[LINE_SEGMENTS_NUM];
+static Vector2D			gRoomPoints[LINE_SEGMENTS_NUM * 2];
+static LineSegment2D	gRoomLineSegments[LINE_SEGMENTS_NUM];
 
 #if(TEST_PART_2)
 
-static AEVec2			gPillarsCenters[PILLARS_NUM];
+static Vector2D			gPillarsCenters[PILLARS_NUM];
 static float			gPillarsRadii[PILLARS_NUM];
-static AELineSegment2D	gPillarsWalls[PILLARS_NUM / 2];
+static LineSegment2D	gPillarsWalls[PILLARS_NUM / 2];
 
 #endif
 
@@ -129,9 +129,9 @@ static void							GameObjectInstanceDestroy(GameObjectInstance* pInst);
 // ---------------------------------------------------------------------------
 
 // Functions to add/remove components
-static void AddComponent_Transform(GameObjectInstance *pInst, AEVec2 *pPosition, float Angle, float ScaleX, float ScaleY);
+static void AddComponent_Transform(GameObjectInstance *pInst, Vector2D *pPosition, float Angle, float ScaleX, float ScaleY);
 static void AddComponent_Sprite(GameObjectInstance *pInst, unsigned int ShapeType);
-static void AddComponent_Physics(GameObjectInstance *pInst, AEVec2 *pVelocity);
+static void AddComponent_Physics(GameObjectInstance *pInst, Vector2D *pVelocity);
 
 static void RemoveComponent_Transform(GameObjectInstance *pInst);
 static void RemoveComponent_Sprite(GameObjectInstance *pInst);
@@ -227,40 +227,40 @@ void GameStatePlayLoad(void)
 
 
 	// Building map boundaries
-	AEVec2Set(&gRoomPoints[0], -350.0f, 100.0f);		AEVec2Set(&gRoomPoints[1], 0, 250.0f);
-	AEVec2Set(&gRoomPoints[2], 0, 250.0f);				AEVec2Set(&gRoomPoints[3], 350.0f, 100.0f);
-	AEVec2Set(&gRoomPoints[4], 350.0f, 100.0f);			AEVec2Set(&gRoomPoints[5], 275.0f, -250.0f);
-	AEVec2Set(&gRoomPoints[6], 275.0f, -250.0f);		AEVec2Set(&gRoomPoints[7], -275.0f, -250.0);
-	AEVec2Set(&gRoomPoints[8], -275.0f, -250.0f);		AEVec2Set(&gRoomPoints[9], -350.0f, 100.0f);
+	Vector2DSet(&gRoomPoints[0], -350.0f, 100.0f);		Vector2DSet(&gRoomPoints[1], 0, 250.0f);
+	Vector2DSet(&gRoomPoints[2], 0, 250.0f);				Vector2DSet(&gRoomPoints[3], 350.0f, 100.0f);
+	Vector2DSet(&gRoomPoints[4], 350.0f, 100.0f);			Vector2DSet(&gRoomPoints[5], 275.0f, -250.0f);
+	Vector2DSet(&gRoomPoints[6], 275.0f, -250.0f);		Vector2DSet(&gRoomPoints[7], -275.0f, -250.0);
+	Vector2DSet(&gRoomPoints[8], -275.0f, -250.0f);		Vector2DSet(&gRoomPoints[9], -350.0f, 100.0f);
 
 	// Build line segments
 	for(i = 0; i < LINE_SEGMENTS_NUM; ++i)
-		AEBuildLineSegment2D(&gRoomLineSegments[i], &gRoomPoints[i*2], &gRoomPoints[i*2 + 1]);
+		LineSegment2DBuildLineSegment2D(&gRoomLineSegments[i], &gRoomPoints[i*2], &gRoomPoints[i*2 + 1]);
 
 
 #if(TEST_PART_2)
 	// Pillars
-	AEVec2Set(&gPillarsCenters[0], -200.0f, 0.0f);
+	Vector2DSet(&gPillarsCenters[0], -200.0f, 0.0f);
 	gPillarsRadii[0] = 15;
 	
-	AEVec2Set(&gPillarsCenters[1], -150.0f, 100.0f);
+	Vector2DSet(&gPillarsCenters[1], -150.0f, 100.0f);
 	gPillarsRadii[1] = 20;
 	
-	AEVec2Set(&gPillarsCenters[2], -100.0f, -150.0f);
+	Vector2DSet(&gPillarsCenters[2], -100.0f, -150.0f);
 	gPillarsRadii[2] = 15;
 
-	AEVec2Set(&gPillarsCenters[3], 100.0f, -175.0f);
+	Vector2DSet(&gPillarsCenters[3], 100.0f, -175.0f);
 	gPillarsRadii[3] = 10;
 	
-	AEVec2Set(&gPillarsCenters[4], 175.0f, 100.0f);
+	Vector2DSet(&gPillarsCenters[4], 175.0f, 100.0f);
 	gPillarsRadii[4] = 20;
 	
-	AEVec2Set(&gPillarsCenters[5], 225.0f, -25.0f);
+	Vector2DSet(&gPillarsCenters[5], 225.0f, -25.0f);
 	gPillarsRadii[5] = 10;
 
 	// Pillars walls
 	for(i = 0; i < PILLARS_NUM/2; ++i)
-		AEBuildLineSegment2D(&gPillarsWalls[i], &gPillarsCenters[i*2], &gPillarsCenters[i*2 + 1]);
+		BuildLineSegment2D(&gPillarsWalls[i], &gPillarsCenters[i*2], &gPillarsCenters[i*2 + 1]);
 
 #endif
 }
@@ -278,23 +278,23 @@ void GameStatePlayInit(void)
 
 	spBall = GameObjectInstanceCreate(OBJECT_TYPE_BALL);
  
-	AEVec2Set(&spBall->mpComponent_Transform->mPosition, 0.0f, 0.0f);
+	Vector2DSet(&spBall->mpComponent_Transform->mPosition, 0.0f, 0.0f);
 	spBall->mpComponent_Transform->mScaleX = BALL_RADIUS * 2;
 	spBall->mpComponent_Transform->mScaleY = BALL_RADIUS * 2;
-	AEVec2Set(&spBall->mpComponent_Physics->mVelocity, 130.0f, 110.0f);
+	Vector2DSet(&spBall->mpComponent_Physics->mVelocity, 130.0f, 110.0f);
 
 
 	// Wall instances
 	for(i = 0; i < LINE_SEGMENTS_NUM; ++i)
 	{	
 		float length, angle;
-		AEVec2 v;
+		Vector2D v;
 		GameObjectInstance *pWall;
 
-		length = AEVec2Distance(&gRoomPoints[2*i], &gRoomPoints[2*i + 1]);
+		length = Vector2DDistance(&gRoomPoints[2*i], &gRoomPoints[2*i + 1]);
 		
-		AEVec2Sub(&v, &gRoomPoints[2*i + 1], &gRoomPoints[2*i]);
-		AEVec2Normalize(&v, &v);
+		Vector2DSub(&v, &gRoomPoints[2*i + 1], &gRoomPoints[2*i]);
+		Vector2DNormalize(&v, &v);
 		
 		angle = atan2(v.y, v.x);
 		pWall = GameObjectInstanceCreate(OBJECT_TYPE_LINE);
@@ -309,14 +309,14 @@ void GameStatePlayInit(void)
 	for(i = 0; i < (PILLARS_NUM >> 1); ++i)
 	{	
 		float length, angle;
-		AEVec2 v;
+		Vector2D v;
 		GameObjectInstance *pInst;
 
 		// segments
-		length = AEVec2Distance(&gPillarsCenters[2*i], &gPillarsCenters[2*i + 1]);
+		length = Vector2DDistance(&gPillarsCenters[2*i], &gPillarsCenters[2*i + 1]);
 	
-		AEVec2Sub(&v, &gPillarsCenters[2*i + 1], &gPillarsCenters[2*i]);
-		AEVec2Normalize(&v, &v);
+		Vector2DSub(&v, &gPillarsCenters[2*i + 1], &gPillarsCenters[2*i]);
+		Vector2DNormalize(&v, &v);
 		
 		angle = atan2(v.y, v.x);
 
@@ -344,14 +344,14 @@ void GameStatePlayInit(void)
 	// Normals of the outer lines
 	for(i = 0; i < LINE_SEGMENTS_NUM; ++i)
 	{	
-		AEVec2 pos;
+		Vector2D pos;
 		float angle;
 		GameObjectInstance *pInst;
 
 		pos.x = (gRoomPoints[2*i].x + gRoomPoints[2*i + 1].x) / 2.0f;
 		pos.y = (gRoomPoints[2*i].y + gRoomPoints[2*i + 1].y) / 2.0f;
 		
-		angle = AEVec2AngleFromVec2(&gRoomLineSegments[i].mN);
+		angle = Vector2DAngleFromVec2(&gRoomLineSegments[i].mN);
 
 		pInst = GameObjectInstanceCreate(OBJECT_TYPE_DEBUG_LINE);
 		pInst->mpComponent_Transform->mPosition = pos;
@@ -368,14 +368,14 @@ void GameStatePlayInit(void)
 	// Normals of the inner lines
 	for(i = 0; i < (PILLARS_NUM >> 1); ++i)
 	{	
-		AEVec2 pos;
+		Vector2D pos;
 		float angle;
 		GameObjectInstance *pInst;
 
 		pos.x = (gPillarsCenters[2*i].x + gPillarsCenters[2*i + 1].x) / 2.0f;
 		pos.y = (gPillarsCenters[2*i].y + gPillarsCenters[2*i + 1].y) / 2.0f;
 
-		angle = AEVec2AngleFromVec2(&gPillarsWalls[i].mN);
+		angle = Vector2DAngleFromVec2(&gPillarsWalls[i].mN);
 
 		pInst = GameObjectInstanceCreate(OBJECT_TYPE_DEBUG_LINE);
 		pInst->mpComponent_Transform->mPosition = pos;
@@ -396,10 +396,10 @@ void GameStatePlayInit(void)
 void GameStatePlayUpdate(void)
 {
 	float smallestT;
-	AEVec2 closestIntersectionPoint, r;
+	Vector2D closestIntersectionPoint, r;
 	unsigned int i;
-	AEVec2 newBallPos;
-	AEVec2 intersectionPoint;
+	Vector2D newBallPos;
+	Vector2D intersectionPoint;
 
 
 	float frameTime = AEFrameRateControllerGetFrameTime();
@@ -437,7 +437,7 @@ void GameStatePlayUpdate(void)
 
 		// Update the positions of objects
 
-		AEVec2ScaleAdd(&newBallPos, &spBall->mpComponent_Physics->mVelocity, &spBall->mpComponent_Transform->mPosition, frameTime);
+		Vector2DScaleAdd(&newBallPos, &spBall->mpComponent_Physics->mVelocity, &spBall->mpComponent_Transform->mPosition, frameTime);
 
 
 		smallestT = -1.0f;
@@ -445,7 +445,7 @@ void GameStatePlayUpdate(void)
 		// Collision with line segments
 		for(i = 0; i < LINE_SEGMENTS_NUM; ++i)
 		{
-			float t = AEReflectAnimatedCircleOnStaticLineSegment(&spBall->mpComponent_Transform->mPosition, &newBallPos, BALL_RADIUS, &gRoomLineSegments[i], &intersectionPoint, &r);
+			float t = ReflectAnimatedCircleOnStaticLineSegment(&spBall->mpComponent_Transform->mPosition, &newBallPos, BALL_RADIUS, &gRoomLineSegments[i], &intersectionPoint, &r);
 
 			if(t > 0.0f && (t < smallestT || smallestT < 0.0f))
 			{
@@ -459,7 +459,7 @@ void GameStatePlayUpdate(void)
 		// Collision with pillars (Static circles)
 		for(i = 0; i < PILLARS_NUM; ++i)
 		{
-			float t = AEReflectAnimatedCircleOnStaticCircle(&spBall->mpComponent_Transform->mPosition, &newBallPos, BALL_RADIUS, &gPillarsCenters[i], gPillarsRadii[i], &intersectionPoint, &r);
+			float t = ReflectAnimatedCircleOnStaticCircle(&spBall->mpComponent_Transform->mPosition, &newBallPos, BALL_RADIUS, &gPillarsCenters[i], gPillarsRadii[i], &intersectionPoint, &r);
 
 			if(t > 0.0f && (t < smallestT || smallestT < 0.0f))
 			{
@@ -471,7 +471,7 @@ void GameStatePlayUpdate(void)
 		// Collision with pillars' walls (Line segments between the static circles)
 		for (i = 0; i < PILLARS_NUM / 2; ++i)
 		{
-			float t = AEReflectAnimatedCircleOnStaticLineSegment(&spBall->mpComponent_Transform->mPosition, &newBallPos, BALL_RADIUS, &gPillarsWalls[i], &intersectionPoint, &r);
+			float t = ReflectAnimatedCircleOnStaticLineSegment(&spBall->mpComponent_Transform->mPosition, &newBallPos, BALL_RADIUS, &gPillarsWalls[i], &intersectionPoint, &r);
 
 			if (t > 0.0f && (t < smallestT || smallestT < 0.0f))
 			{
@@ -484,19 +484,19 @@ void GameStatePlayUpdate(void)
 
 		if (smallestT > 0.0)
 		{
-			AEVec2Add(&spBall->mpComponent_Transform->mPosition, &closestIntersectionPoint, &r);
-			AEVec2Normalize(&r, &r);
-			AEVec2Scale(&spBall->mpComponent_Physics->mVelocity, &r, AEVec2Length(&spBall->mpComponent_Physics->mVelocity));
+			Vector2DAdd(&spBall->mpComponent_Transform->mPosition, &closestIntersectionPoint, &r);
+			Vector2DNormalize(&r, &r);
+			Vector2DScale(&spBall->mpComponent_Physics->mVelocity, &r, Vector2DLength(&spBall->mpComponent_Physics->mVelocity));
 		}
 
-		AEVec2ScaleAdd(&spBall->mpComponent_Transform->mPosition, &spBall->mpComponent_Physics->mVelocity, &spBall->mpComponent_Transform->mPosition, frameTime);
+		Vector2DScaleAdd(&spBall->mpComponent_Transform->mPosition, &spBall->mpComponent_Physics->mVelocity, &spBall->mpComponent_Transform->mPosition, frameTime);
 
 
 #if(DRAW_DEBUG)
 		{
 			float cosine, sine, velLength, angle;
 
-			velLength = AEVec2Length(&spBall->mpComponent_Physics->mVelocity);
+			velLength = Vector2DLength(&spBall->mpComponent_Physics->mVelocity);
 			cosine = spBall->mpComponent_Physics->mVelocity.x / velLength;
 			sine = spBall->mpComponent_Physics->mVelocity.y / velLength;
 
@@ -516,19 +516,19 @@ void GameStatePlayUpdate(void)
 	//Computing the transformation matrices of the game object instances
 	for (i = 0; i < GAME_OBJ_INST_NUM_MAX; ++i)
 	{
-		AEMtx33 scale, rot, trans;
+		Matrix2D scale, rot, trans;
 		GameObjectInstance* pInst = sgGameObjectInstanceList + i;
 
 		// skip non-active object
 		if (0 == (pInst->mFlag & FLAG_ACTIVE))
 			continue;
 
-		AEMtx33Scale(&scale, pInst->mpComponent_Transform->mScaleX, pInst->mpComponent_Transform->mScaleY);
-		AEMtx33Rot(&rot, pInst->mpComponent_Transform->mAngle);
-		AEMtx33Trans(&trans, pInst->mpComponent_Transform->mPosition.x, pInst->mpComponent_Transform->mPosition.y);
+		Matrix2DScale(&scale, pInst->mpComponent_Transform->mScaleX, pInst->mpComponent_Transform->mScaleY);
+		Matrix2DRot(&rot, pInst->mpComponent_Transform->mAngle);
+		Matrix2DTrans(&trans, pInst->mpComponent_Transform->mPosition.x, pInst->mpComponent_Transform->mPosition.y);
 
-		AEMtx33Concat(&pInst->mpComponent_Transform->mTransform, &trans, &rot);
-		AEMtx33Concat(&pInst->mpComponent_Transform->mTransform, &pInst->mpComponent_Transform->mTransform, &scale);
+		Matrix2DConcat(&pInst->mpComponent_Transform->mTransform, &trans, &rot);
+		Matrix2DConcat(&pInst->mpComponent_Transform->mTransform, &pInst->mpComponent_Transform->mTransform, &scale);
 	}
 }
 
@@ -671,7 +671,7 @@ void GameObjectInstanceDestroy(GameObjectInstance* pInst)
 
 // ---------------------------------------------------------------------------
 
-void AddComponent_Transform(GameObjectInstance *pInst, AEVec2 *pPosition, float Angle, float ScaleX, float ScaleY)
+void AddComponent_Transform(GameObjectInstance *pInst, Vector2D *pPosition, float Angle, float ScaleX, float ScaleY)
 {
 	if (0 != pInst)
 	{
@@ -680,8 +680,8 @@ void AddComponent_Transform(GameObjectInstance *pInst, AEVec2 *pPosition, float 
 			pInst->mpComponent_Transform = (Component_Transform *)calloc(1, sizeof(Component_Transform));
 		}
 
-		AEVec2 zeroVec2;
-		AEVec2Zero(&zeroVec2);
+		Vector2D zeroVec2;
+		Vector2DZero(&zeroVec2);
 
 		pInst->mpComponent_Transform->mScaleX = ScaleX;
 		pInst->mpComponent_Transform->mScaleY = ScaleY;
@@ -709,7 +709,7 @@ void AddComponent_Sprite(GameObjectInstance *pInst, unsigned int ShapeType)
 
 // ---------------------------------------------------------------------------
 
-void AddComponent_Physics(GameObjectInstance *pInst, AEVec2 *pVelocity)
+void AddComponent_Physics(GameObjectInstance *pInst, Vector2D *pVelocity)
 {
 	if (0 != pInst)
 	{
@@ -718,8 +718,8 @@ void AddComponent_Physics(GameObjectInstance *pInst, AEVec2 *pVelocity)
 			pInst->mpComponent_Physics = (Component_Physics *)calloc(1, sizeof(Component_Physics));
 		}
 
-		AEVec2 zeroVec2;
-		AEVec2Zero(&zeroVec2);
+		Vector2D zeroVec2;
+		Vector2DZero(&zeroVec2);
 
 		pInst->mpComponent_Physics->mVelocity = pVelocity ? *pVelocity : zeroVec2;
 		pInst->mpComponent_Physics->mpOwner = pInst;

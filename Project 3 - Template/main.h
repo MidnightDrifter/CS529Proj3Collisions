@@ -22,7 +22,9 @@
 // game state manager
 #include "GameStateMgr.h"
 #include "Math2D.h"
-
+#include "Vector2D.h"
+#include "Matrix2D.h"
+#include "LineSegment2D.h"
 // ---------------------------------------------------------------------------
 
 #endif // MAIN_H
