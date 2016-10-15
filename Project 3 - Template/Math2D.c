@@ -155,7 +155,7 @@ This function checks whether an animated point is colliding with a line segment
 */
 float AnimatedPointToStaticLineSegment(Vector2D *Ps, Vector2D *Pe, LineSegment2D *LS, Vector2D *Pi)
 {
-	if( (Pe->x == Ps->x && Pe->y == Ps->y) ||(Vector2DDotProduct(&LS->mN, Ps) > LS->mNdotP0 && Vector2DDotProduct(&LS->mN, Pe)>LS->mNdotP0) || (Vector2DDotProduct(&LS->mN, Ps) < LS->mNdotP0 && Vector2DDotProduct(&LS->mN, Pe) < LS->mNdotP0))
+	if( (Pe->x == Ps->x && Pe->y == Ps->y) ||(Vector2DDotProduct(&LS->mN, Ps) > LS->mNdotP0 && Vector2DDotProduct(&LS->mN, Pe) > LS->mNdotP0) || (Vector2DDotProduct(&LS->mN, Ps) < LS->mNdotP0 && Vector2DDotProduct(&LS->mN, Pe) < LS->mNdotP0))
 	{
 		return -1.f;
 	}
@@ -170,7 +170,7 @@ float AnimatedPointToStaticLineSegment(Vector2D *Ps, Vector2D *Pe, LineSegment2D
 		return -1;
 	}
 
-	 t = ((LS->mNdotP0 - Vector2DDotProduct(&LS->mN, Ps))/ t);
+	 t = ((LS->mNdotP0 - Vector2DDotProduct(&LS->mN, Ps))/ Vector2DDotProduct(&LS->mN, &v));
 
 	 if (t > 1 || t < 0)
 	 {
@@ -178,13 +178,14 @@ float AnimatedPointToStaticLineSegment(Vector2D *Ps, Vector2D *Pe, LineSegment2D
 	 }
 
 	 Vector2D tempI, line, nLine, ItoP1, ItoP0;
+	 
 	 Vector2DScaleAdd(&tempI, &v, Ps, t);
-	 Vector2DSubtract(&line, LS->mP0, LS->mP1);
-	 Vector2DSubtract(&ItoP1, &tempI, LS->mP1);
-	 Vector2DSubtract(&ItoP0, &tempI, LS->mP0);
+	 Vector2DSub(&line, &LS->mP1, &LS->mP0);
+	 Vector2DSub(&ItoP1, &tempI, &LS->mP1);
+	 Vector2DSub(&ItoP0, &tempI, &LS->mP0);
 
-	 Vector2DScale(&nLine, &line, -1.f);
-	 if (Vector2DDotProduct(&line, &ItoP1) < 0 || Vector2DDotProduct(&nLine, &ItoP0) < 0)
+	 Vector2DSub(&nLine, &LS->mP0, &LS->mP1);
+	 if (Vector2DDotProduct(&line, &ItoP0) < 0 || Vector2DDotProduct(&nLine, &ItoP1) < 0)
 	 {
 		 return -1.f;
 	 }
@@ -217,7 +218,7 @@ float AnimatedCircleToStaticLineSegment(Vector2D *Ps, Vector2D *Pe, float Radius
 {
 	//return -1.0f;
 	float nR = -1 * Radius;
-	if ((Pe->x == Ps->x && Pe->y == Ps->y) || (LS->mNdotP0 - Vector2DDotProduct(&LS->mN, Ps) < nR  && LS->mNdotP0 - Vector2DDotProduct(&LS->mN, Pe) < nR) || (LS->mNdotP0 -Vector2DDotProduct(&LS->mN, Ps) > Radius &&  LS->mNdotP0 - Vector2DDotProduct(&LS->mN, Pe) > Radius))
+	if ((Pe->x == Ps->x && Pe->y == Ps->y) || (Vector2DDotProduct(&LS->mN, Ps) - LS->mNdotP0) < nR  &&  (Vector2DDotProduct(&LS->mN, Pe) - LS->mNdotP0  < nR) || (Vector2DDotProduct(&LS->mN, Ps)- LS->mNdotP0  > Radius &&   Vector2DDotProduct(&LS->mN, Pe) - LS->mNdotP0 > Radius))
 	{
 		return -1.f;
 	}
@@ -240,7 +241,7 @@ float AnimatedCircleToStaticLineSegment(Vector2D *Ps, Vector2D *Pe, float Radius
 		return -1;
 	}
 
-	t = ((LS->mNdotP0 - Vector2DDotProduct(&LS->mN, Ps) + d) / t);
+	t = (((LS->mNdotP0 - Vector2DDotProduct(&LS->mN, Ps) + d)) / Vector2DDotProduct(&LS->mN, &v));
 
 	if (t > 1 || t < 0)
 	{
@@ -249,11 +250,11 @@ float AnimatedCircleToStaticLineSegment(Vector2D *Ps, Vector2D *Pe, float Radius
 
 	Vector2D tempI, line,nLine, ItoP1, ItoP0;
 	Vector2DScaleAdd(&tempI, &v, Ps, t);
-	Vector2DSubtract(&line, LS->mP0, LS->mP1);
-	Vector2DSubtract(&ItoP1, &tempI, LS->mP1);
-	Vector2DSubtract(&ItoP0, &tempI, LS->mP0);
-	Vector2DScale(&nLine, &line, -1.f);
-	if (Vector2DDotProduct(&line, &ItoP1) < 0 || Vector2DDotProduct(&nLine, &ItoP0) < 0)
+	Vector2DSub(&line, &LS->mP1, &LS->mP0);
+	Vector2DSub(&ItoP1, &tempI, &LS->mP1);
+	Vector2DSub(&ItoP0, &tempI, &LS->mP0);
+	Vector2DSub(&nLine, &LS->mP0, &LS->mP1);
+	if (Vector2DDotProduct(&line, &ItoP0) < 0 || Vector2DDotProduct(&nLine, &ItoP1) < 0)
 	{
 		return -1.f;
 	}
@@ -287,14 +288,17 @@ float ReflectAnimatedPointOnStaticLineSegment(Vector2D *Ps, Vector2D *Pe, LineSe
 		return -1.0f;
 	}
 	float speed = sqrtf(((Ps->x - Pe->x)*(Ps->x - Pe->x)) + ((Ps->y - Pe->y)*(Ps->y - Pe->y)));  //Scale down by a factor of 1-t  ?
-	Vector2D i,r;
+	Vector2D i, r;
 	Vector2DSet(&i, Pe->x - Pi->x, Pe->y - Pi->y);
 	Vector2DScale(&r, &LS->mN, 2 * Vector2DDotProduct(&i, &LS->mN));
-	Vector2DAdd(&i, Pi, &i);
-	Vector2DSubtract(R, &i, &r);
+	//Vector2DAdd(&i, Pi, &i);
+	Vector2DSub(&r, &i, &r);
+	Vector2DSet(R, r.x, r.y);
 	Vector2DNormalize(R, R);
-	Vector2DScale(R, R, speed);  
+	//Vector2DScale(R, R, speed);
+	//Vector2DAdd(Pe, &r, Pi);
 	return f;
+
 
 
 
@@ -330,10 +334,13 @@ float ReflectAnimatedCircleOnStaticLineSegment(Vector2D *Ps, Vector2D *Pe, float
 	Vector2D i, r;
 	Vector2DSet(&i, Pe->x - Pi->x, Pe->y - Pi->y);
 	Vector2DScale(&r, &LS->mN, 2 * Vector2DDotProduct(&i, &LS->mN));
-	Vector2DAdd(&i, Pi, &i);
-	Vector2DSubtract(R, &i, &r);
-	Vector2DNormalize(R, R);
-	Vector2DScale(R, R, speed);
+//	Vector2DAdd(&i, Pi, &i);
+	Vector2DSub(&r, &i, &r);
+	Vector2DNormalize(&r, &r);
+	Vector2DSet(R, r.x, r.y);
+	//Vector2DNormalize(R, R);
+	//Vector2DScale(&r, &r, speed);
+	//Vector2DAdd(Pe, &r, Pi); 
 	return f;
 
 }
@@ -359,36 +366,43 @@ float AnimatedPointToStaticCircle(Vector2D *Ps, Vector2D *Pe, Vector2D *Center, 
 	Vector2D v, bc, vUnit;
 	float f, disc, a, b, c,m,n;
 
-	Vector2DSubtract(&v, Pe, Ps);
-	Vector2DSubtract(&bc, Center, Ps);
+	Vector2DSub(&v, Pe, Ps);
+	Vector2DSub(&bc, Center, Ps);
 	Vector2DNormalize(&vUnit, &v);
 	m = Vector2DDotProduct(&bc, &vUnit);
-	n = (v.x * v.x + v.y * v.y) - (m*m);
-	if ((v.x == v.y && v.x == 0) ||(n*n > Radius*Radius))
+	n = ((v.x * v.x) + (v.y * v.y)) - (m*m);
+	if ((Pe->x == Ps->x && Pe->y == Ps->y) || (n > Radius*Radius) || (m < 0 && Vector2DSquareDistance(Ps,Center) > Radius*Radius))
 	{
 		return -1.f;
 	}
+	//Vector2D bc2;
+	//Vector2DScale(&bc2, &bc, -2.f);
 	a = Vector2DDotProduct(&v, &v);
-	b = -2 * Vector2DDotProduct(&bc, &v);
-	c = (Vector2DDotProduct(&bc, &bc)) * (Radius * Radius);
-	disc = (b*b) - (4 * a*c);
+	b = -2*  Vector2DDotProduct(&bc, &v);
+	c = (Vector2DDotProduct(&bc, &bc)) - (Radius * Radius);
+	disc = (b*b) - (4.f * a*c);
 
 	if(disc<0)
 	{
-		return -1;
+		return -1.f;
 	}
 
-	else if (disc > 0)
-	{
-		f = fminf(((b + sqrtf(disc))/(-2*a)), ((b - sqrtf(disc)) / (-2 * a)));
-	}
-
-	else
+	else if (disc ==0)
 	{
 		f = b / (-2 * a);
 	}
 
-	if (f > 1 || f < 0)
+	else
+	{
+		float f1, f2;
+		f1 = ((-1 * b) + sqrtf(disc)) / (2 * a);
+		f2 = ((-1 * b) - sqrtf(disc)) / (2 * a);
+		f = fminf(f1,f2);
+	}
+
+
+
+	if (f > 1.f || f < 0.f)
 	{
 		return -1;
 	}
@@ -424,16 +438,18 @@ float ReflectAnimatedPointOnStaticCircle(Vector2D *Ps, Vector2D *Pe, Vector2D *C
 	{
 		return -1.f;
 	}
-	float speed = sqrtf(((Ps->x - Pe->x)*(Ps->x - Pe->x)) + ((Ps->y - Pe->y)*(Ps->y - Pe->y)));
-	speed *= (1.f - f);
-	Vector2D m, n;
-	Vector2DSubtract(&m, Pi, Ps);
-	Vector2DSubtract(&n, Pi, Center);
+	//float speed = sqrtf(((Ps->x - Pe->x)*(Ps->x - Pe->x)) + ((Ps->y - Pe->y)*(Ps->y - Pe->y)));
+	//speed *= (1.f - f);
+	Vector2D m, n,nS;
+	Vector2DSub(&m, Ps, Pi);
+	Vector2DSub(&n, Pi, Center);
 	Vector2DNormalize(&n, &n);
-	Vector2DScale(&n, &n, 2 * Vector2DDotProduct(&m, &n));
-	Vector2DSubtract(&n, &n, &m);
-	Vector2DScale(&n, &n, speed);
-	Vector2DAdd(R, Pi, &n);
+	Vector2DScale(&nS, &n, 2 * Vector2DDotProduct(&m, &n));
+	Vector2DSub(R, &nS, &m);
+	Vector2DNormalize(R, R);
+	//Vector2DSet(R, nS.x, n.y);
+	//Vector2DScale(&n, &n, speed);
+	//Vector2DAdd(R, Pi, &n);
 	return f;
 }
 
@@ -456,7 +472,7 @@ This function checks whether an animated circle is colliding with a static circl
 float AnimatedCircleToStaticCircle(Vector2D *Center0s, Vector2D *Center0e, float Radius0, Vector2D *Center1, float Radius1, Vector2D *Pi)
 {
 	//return -1.0f;
-	return AnimatedPointToStaticCircle(Center0s, Center0e, Center1, Radius0 + Radius1, Pi);
+	return AnimatedPointToStaticCircle(Center0s, Center0e, Center1, (Radius0 + Radius1), Pi);
 }
 
 
@@ -481,6 +497,6 @@ float ReflectAnimatedCircleOnStaticCircle(Vector2D *Center0s, Vector2D *Center0e
 {
 //	return -1.0f;
 
-	return ReflectAnimatedPointOnStaticCircle(Center0s, Center0e, Center1, Radius0 + Radius1, Pi, R);
+	return ReflectAnimatedPointOnStaticCircle(Center0s, Center0e, Center1, (Radius0 + Radius1), Pi, R);
 
 }

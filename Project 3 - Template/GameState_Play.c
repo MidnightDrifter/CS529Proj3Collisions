@@ -23,8 +23,8 @@
 
 #define FLAG_ACTIVE		0x00000001
 
-#define TEST_PART_2				0
-#define DRAW_DEBUG				0									// Set this to 1 in order to draw debug data
+#define TEST_PART_2				1
+#define DRAW_DEBUG				1									// Set this to 1 in order to draw debug data
 
 
 #define LINE_SEGMENTS_NUM		5									// Don't change
@@ -235,7 +235,7 @@ void GameStatePlayLoad(void)
 
 	// Build line segments
 	for(i = 0; i < LINE_SEGMENTS_NUM; ++i)
-		LineSegment2DBuildLineSegment2D(&gRoomLineSegments[i], &gRoomPoints[i*2], &gRoomPoints[i*2 + 1]);
+BuildLineSegment2D(&gRoomLineSegments[i], &gRoomPoints[i*2], &gRoomPoints[i*2 + 1]);
 
 
 #if(TEST_PART_2)
@@ -351,7 +351,7 @@ void GameStatePlayInit(void)
 		pos.x = (gRoomPoints[2*i].x + gRoomPoints[2*i + 1].x) / 2.0f;
 		pos.y = (gRoomPoints[2*i].y + gRoomPoints[2*i + 1].y) / 2.0f;
 		
-		angle = Vector2DAngleFromVec2(&gRoomLineSegments[i].mN);
+		angle = AEVec2AngleFromVec2(&gRoomLineSegments[i].mN);  //CHECK THIS AAAA
 
 		pInst = GameObjectInstanceCreate(OBJECT_TYPE_DEBUG_LINE);
 		pInst->mpComponent_Transform->mPosition = pos;
@@ -375,7 +375,7 @@ void GameStatePlayInit(void)
 		pos.x = (gPillarsCenters[2*i].x + gPillarsCenters[2*i + 1].x) / 2.0f;
 		pos.y = (gPillarsCenters[2*i].y + gPillarsCenters[2*i + 1].y) / 2.0f;
 
-		angle = Vector2DAngleFromVec2(&gPillarsWalls[i].mN);
+		angle = AEVec2AngleFromVec2(&gPillarsWalls[i].mN);
 
 		pInst = GameObjectInstanceCreate(OBJECT_TYPE_DEBUG_LINE);
 		pInst->mpComponent_Transform->mPosition = pos;
@@ -524,8 +524,8 @@ void GameStatePlayUpdate(void)
 			continue;
 
 		Matrix2DScale(&scale, pInst->mpComponent_Transform->mScaleX, pInst->mpComponent_Transform->mScaleY);
-		Matrix2DRot(&rot, pInst->mpComponent_Transform->mAngle);
-		Matrix2DTrans(&trans, pInst->mpComponent_Transform->mPosition.x, pInst->mpComponent_Transform->mPosition.y);
+		Matrix2DRotRad(&rot, pInst->mpComponent_Transform->mAngle);  //CHECK THIS AAAA
+		Matrix2DTranslate(&trans, pInst->mpComponent_Transform->mPosition.x, pInst->mpComponent_Transform->mPosition.y);
 
 		Matrix2DConcat(&pInst->mpComponent_Transform->mTransform, &trans, &rot);
 		Matrix2DConcat(&pInst->mpComponent_Transform->mTransform, &pInst->mpComponent_Transform->mTransform, &scale);

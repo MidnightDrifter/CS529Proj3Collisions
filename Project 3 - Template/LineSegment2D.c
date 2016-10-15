@@ -16,7 +16,7 @@ int BuildLineSegment2D(LineSegment2D *LS, Vector2D *Point0, Vector2D *Point1)
 		LS->mP1.y = Point1->y;
 
 		LS->mN.x = LS->mP1.y - LS->mP0.y;
-		LS->mN.y = -1 * (LS->mP1.x - LS->mP0.x);
+		LS->mN.y = (LS->mP0.x - LS->mP1.x);
 
 		Vector2DNormalize(&LS->mN, &LS->mN);
 		LS->mNdotP0 = Vector2DDotProduct(&LS->mN, &LS->mP0);
